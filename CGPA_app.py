@@ -7,7 +7,7 @@ st.write("This app helps students calculate GPA for each semester and overall CG
 # Number of semesters
 num_semesters = st.number_input("Enter total number of semesters:", min_value=1, max_value=12, value=4)
 
-semester_gpas = []  # will store GPA of each semester
+semester_gpas = []  # store GPA of each semester
 
 # Loop through each semester
 for sem in range(1, num_semesters + 1):
@@ -19,23 +19,21 @@ for sem in range(1, num_semesters + 1):
         grade = st.number_input(f"Enter GPA for Subject {subj}:", min_value=0.0, max_value=4.0, step=0.01, key=f"grade_{sem}_{subj}")
         subject_grades.append(grade)
     
-    if st.button(f"Calculate Semester {sem} GPA", key=f"calc_{sem}"):
-        valid_grades = [g for g in subject_grades if g > 0]
-        if valid_grades:
-            semester_gpa = sum(valid_grades) / len(valid_grades)
-            st.success(f"Semester {sem} GPA = {semester_gpa:.2f}")
-            semester_gpas.append(semester_gpa)
-        else:
-            st.warning("Please enter at least one GPA value for this semester.")
-
-# Calculate overall CGPA
-if st.button("Calculate Overall CGPA"):
-    valid_sem_gpas = [g for g in semester_gpas if g > 0]
-    if valid_sem_gpas:
-        cgpa = sum(valid_sem_gpas) / len(valid_sem_gpas)
-        st.success(f"Your Overall CGPA after {len(valid_sem_gpas)} semesters is: **{cgpa:.2f}**")
+    # Auto calculate semester GPA when all values entered
+    if all(g > 0 for g in subject_grades):
+        semester_gpa = sum(subject_grades) / len(subject_grades)
+        semester_gpas.append(semester_gpa)
+        st.success(f"✅ Semester {sem} GPA = {semester_gpa:.2f}")
     else:
-        st.warning("Please calculate at least one semester GPA first.")
+        st.info(f"Please enter all subject GPAs for Semester {sem} to calculate GPA.")
+
+# Calculate overall CGPA automatically if at least one semester is complete
+if semester_gpas:
+    cgpa = sum(semester_gpas) / len(semester_gpas)
+    st.divider()
+    st.success(f"🎯 Your Overall CGPA after {len(semester_gpas)} semesters is: **{cgpa:.2f}**")
+else:
+    st.warning("Enter GPA values for at least one semester to calculate CGPA.")
 
 st.divider()
 st.info("""
