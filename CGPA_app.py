@@ -1,46 +1,83 @@
 import streamlit as st
 
-st.title("🎓 Student GPA & CGPA Calculator")
+st.title("🎓 Accurate GPA & CGPA Calculator (Supports different # of courses & credits)")
 
-st.write("This app helps students calculate GPA for each semester and overall CGPA.")
+st.write("Enter grade points for each subject and its credit hours. If a subject has no credit info, leave credit as 1.")
 
-# Number of semesters
-num_semesters = st.number_input("Enter total number of semesters:", min_value=1, max_value=12, value=4)
+# number of semesters
+num_semesters = st.number_input("Total number of semesters:", min_value=1, max_value=12, value=4)
 
-semester_gpas = []  # store GPA of each semester
+# store global totals
+global_total_points = 0.0
+global_total_credits = 0.0
 
-# Loop through each semester
+# store semester summaries for display
+semester_summaries = []
+
 for sem in range(1, num_semesters + 1):
-    st.subheader(f"📘 Semester {sem}")
-    num_subjects = st.number_input(f"How many subjects in Semester {sem}?", min_value=1, max_value=10, value=6, key=f"subjects_{sem}")
-    
-    subject_grades = []
-    for subj in range(1, num_subjects + 1):
-        grade = st.number_input(f"Enter GPA for Subject {subj}:", min_value=0.0, max_value=4.0, step=0.01, key=f"grade_{sem}_{subj}")
-        subject_grades.append(grade)
-    
-    # Auto calculate semester GPA when all values entered
-    if all(g > 0 for g in subject_grades):
-        semester_gpa = sum(subject_grades) / len(subject_grades)
-        semester_gpas.append(semester_gpa)
-        st.success(f"✅ Semester {sem} GPA = {semester_gpa:.2f}")
-    else:
-        st.info(f"Please enter all subject GPAs for Semester {sem} to calculate GPA.")
+    st.header(f"Semester {sem}")
+    num_subjects = st.number_input(f"Number of subjects in Semester {sem}:", min_value=1, max_value=20, value=6, key=f"num_subs_{sem}")
 
-# Calculate overall CGPA automatically if at least one semester is complete
-if semester_gpas:
-    cgpa = sum(semester_gpas) / len(semester_gpas)
-    st.divider()
-    st.success(f"🎯 Your Overall CGPA after {len(semester_gpas)} semesters is: **{cgpa:.2f}**")
-else:
-    st.warning("Enter GPA values for at least one semester to calculate CGPA.")
+    sem_points = 0.0
+    sem_credits = 0.0
+
+    # for layout: two columns for grade and credit
+    cols = st.columns((2, 1))
+    with cols[0]:
+        st.markdown("**Enter grade point for each subject (0.00 - 4.00)**")
+    with cols[1]:
+        st.markdown("**Credit hours for each subject** (default 1)")
+
+    for subj in range(1, num_subjects + 1):
+        # unique keys so Streamlit remembers inputs correctly
+        gp_key = f"gp_s{sem}_sub{subj}"
+        cr_key = f"cr_s{sem}_sub{subj}"
+
+        cols = st.columns((2, 1))
+        with cols[0]:
+            grade_point = st.number_input(f"Semester {sem} - Subject {subj} grade point:", min_value=0.0, max_value=4.0, step=0.01, key=gp_key, value=0.0)
+        with cols[1]:
+            credit = st.number_input(f"Credit (S{sem} Sub{subj}):", min_value=0.0, max_value=10.0, step=0.5, key=cr_key, value=1.0)
+
+        # accumulate (even if grade_point 0.0 — includes failed/zero-point subjects)
+        sem_points += grade_point * credit
+        sem_credits += credit
+
+    # compute semester GPA if there are credits
+    if sem_credits > 0:
+        sem_gpa = sem_points / sem_credits
+        st.success(f"Semester {sem} GPA = **{sem_gpa:.3f}**  (Total points: {sem_points:.2f}, Credits: {sem_credits:.1f})")
+    else:
+        sem_gpa = None
+        st.warning(f"Semester {sem} has zero total credits — cannot compute GPA.")
+
+    # add to global totals
+    global_total_points += sem_points
+    global_total_credits += sem_credits
+
+    # save summary row
+    semester_summaries.append({
+        "semester": sem,
+        "sem_points": sem_points,
+        "sem_credits": sem_credits,
+        "sem_gpa": sem_gpa
+    })
 
 st.divider()
-st.info("""
-### Example
-- Semester 1 Subjects → 3.0, 3.2, 2.8 → GPA = 3.00  
-- Semester 2 Subjects → 3.0, 3.4, 2.6 → GPA = 3.00  
-- Semester 3 Subjects → 4.0, 3.8, 4.0 → GPA = 3.93  
-- Semester 4 Subjects → 3, 4, 2, 3, 3, 3 → GPA = 3.00  
-**CGPA = (3.00 + 3.00 + 3.93 + 3.00) / 4 = 3.23**
-""")
+
+# overall CGPA
+if global_total_credits > 0:
+    cgpa = global_total_points / global_total_credits
+    st.success(f"🎯 Overall CGPA = **{cgpa:.3f}**  (Total points: {global_total_points:.2f}, Total credits: {global_total_credits:.1f})")
+else:
+    st.warning("No credits entered across all semesters — cannot compute CGPA.")
+
+st.divider()
+
+# Show a compact summary table
+st.subheader("Summary by Semester")
+for s in semester_summaries:
+    if s["sem_gpa"] is not None:
+        st.write(f"Semester {s['semester']}: GPA = {s['sem_gpa']:.3f}  |  Points = {s['sem_points']:.2f}  | Credits = {s['sem_credits']:.1f}")
+    else:
+        st.write(f"Semester {s['semester']}: GPA = N/A  |  Points = {s['sem_points']:.2f}  | Credits = {s_]()
