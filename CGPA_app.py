@@ -1,38 +1,43 @@
 import streamlit as st
 
+st.set_page_config(page_title="GPA & CGPA Calculator", page_icon="🎓", layout="centered")
+
 st.title("🎓 GPA & CGPA Calculator")
 
-st.write("This app calculates your GPA for each semester and overall CGPA.")
-st.write("👉 Enter the number of subjects, their credits, and your GPA for each semester.")
+st.write("This app helps you calculate your GPA for each semester and overall CGPA easily!")
 
-# Store all semester data
-semesters = []
-
+# Step 1: Number of semesters
 num_semesters = st.number_input("Enter number of semesters:", min_value=1, step=1)
 
-for i in range(num_semesters):
-    st.subheader(f"Semester {i+1}")
-    num_subjects = st.number_input(f"Number of subjects in Semester {i+1}:", min_value=1, step=1, key=f"subs_{i}")
-    
-    credits = []
-    gpa = st.number_input(f"Enter GPA for Semester {i+1} (only numeric value, e.g. 3.75):", min_value=0.0, max_value=4.0, step=0.01, key=f"gpa_{i}")
-    
-    # Ask total credits for the semester
-    total_credits = st.number_input(f"Enter total credits for Semester {i+1}:", min_value=1.0, step=0.5, key=f"credits_{i}")
-    
-    # Store data for CGPA calculation
-    semesters.append({"semester": i+1, "gpa": gpa, "credits": total_credits})
+if num_semesters:
+    semesters = []
+    total_points = 0
+    total_credits = 0
 
-if st.button("Calculate CGPA"):
-    total_points = sum(s["gpa"] * s["credits"] for s in semesters)
-    total_credits = sum(s["credits"] for s in semesters)
-    
+    for sem in range(1, num_semesters + 1):
+        st.subheader(f"Semester {sem}")
+        num_subjects = st.number_input(f"Number of subjects in Semester {sem}:", min_value=1, step=1, key=f"subs_{sem}")
+
+        sem_points = 0
+        sem_credits = 0
+
+        for sub in range(1, num_subjects + 1):
+            st.write(f"**Subject {sub}**")
+            credit = st.number_input(f"Credit hours for Subject {sub}:", min_value=1.0, step=0.5, key=f"credit_{sem}_{sub}")
+            grade_point = st.number_input(f"Grade point (out of 4) for Subject {sub}:", min_value=0.0, max_value=4.0, step=0.01, key=f"grade_{sem}_{sub}")
+
+            sem_points += credit * grade_point
+            sem_credits += credit
+
+        if sem_credits > 0:
+            sem_gpa = sem_points / sem_credits
+            st.success(f"🎯 Semester {sem} GPA = {sem_gpa:.2f}")
+            semesters.append(sem_gpa)
+
+            total_points += sem_points
+            total_credits += sem_credits
+
     if total_credits > 0:
         cgpa = total_points / total_credits
-        st.success(f"🎯 Your CGPA is: {cgpa:.2f}")
-        
-        # Display semester details
-        for s in semesters:
-            st.write(f"Semester {s['semester']}: GPA = {s['gpa']:.2f} | Credits = {s['credits']:.2f}")
-    else:
-        st.warning("Please enter valid credits for all semesters.")
+        st.subheader("🏆 Final Result")
+        st.write(f"**Overall CGPA = {cgpa:.2f}**")
