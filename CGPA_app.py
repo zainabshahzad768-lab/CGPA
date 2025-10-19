@@ -3,48 +3,43 @@ import streamlit as st
 st.set_page_config(page_title="GPA & CGPA Calculator", page_icon="🎓", layout="centered")
 
 st.title("🎓 GPA & CGPA Calculator")
+st.write("Use this app to calculate your GPA and CGPA easily!")
 
-st.write("""
-This app helps students calculate their GPA and CGPA easily.  
-Just enter your subjects, credit hours, and GPAs for each semester.
-""")
+# --- GPA CALCULATOR ---
+st.header("📘 GPA Calculator")
 
-# Step 1: Ask number of semesters
-num_semesters = st.number_input("Enter number of semesters completed:", min_value=1, step=1)
+num_subjects = st.number_input("Enter number of subjects:", min_value=1, step=1)
 
-# Create a list to store GPA and total credits for each semester
-semesters = []
-
-for i in range(int(num_semesters)):
-    st.subheader(f"📘 Semester {i+1}")
-    
-    num_subjects = st.number_input(f"Enter number of subjects in Semester {i+1}:", min_value=1, step=1, key=f"subs_{i}")
-    
+if num_subjects:
     total_points = 0
     total_credits = 0
 
-    for j in range(int(num_subjects)):
-        st.markdown(f"**Subject {j+1}**")
-        credit = st.number_input(f"Credit hours for Subject {j+1}:", min_value=1.0, step=0.5, key=f"credit_{i}_{j}")
-        grade_point = st.number_input(f"Grade Point for Subject {j+1} (e.g., 4.0, 3.7, etc.):", min_value=0.0, max_value=4.0, step=0.1, key=f"gpa_{i}_{j}")
-        
-        total_points += credit * grade_point
+    for i in range(1, num_subjects + 1):
+        st.subheader(f"Subject {i}")
+        credit = st.number_input(f"Credit hours for Subject {i}:", min_value=1.0, step=0.5, key=f"credit_{i}")
+        grade = st.number_input(f"Grade points earned in Subject {i}:", min_value=0.0, max_value=4.0, step=0.01, key=f"grade_{i}")
+        total_points += credit * grade
         total_credits += credit
 
-    # Calculate GPA for this semester
     if total_credits > 0:
-        semester_gpa = total_points / total_credits
-        st.success(f"✅ GPA for Semester {i+1}: {semester_gpa:.2f}")
-        semesters.append((semester_gpa, total_credits))
+        gpa = total_points / total_credits
+        st.success(f"🎯 Your GPA is: **{gpa:.2f}**")
     else:
-        st.warning(f"Please enter valid credits for Semester {i+1}.")
+        st.warning("Please enter valid credit hours and grade points.")
 
-# Step 2: Calculate CGPA
-if st.button("Calculate CGPA"):
-    if semesters:
-        total_points_all = sum(gpa * credits for gpa, credits in semesters)
-        total_credits_all = sum(credits for _, credits in semesters)
-        cgpa = total_points_all / total_credits_all
-        st.subheader(f"🎯 Your CGPA is: {cgpa:.2f}")
-    else:
-        st.error("Please enter semester data first.")
+st.markdown("---")
+
+# --- CGPA CALCULATOR ---
+st.header("🎓 CGPA Calculator")
+
+num_semesters = st.number_input("Enter number of semesters:", min_value=1, step=1, key="num_semesters")
+
+if num_semesters:
+    total_gpa = 0
+
+    for i in range(1, num_semesters + 1):
+        gpa_value = st.number_input(f"GPA for Semester {i}:", min_value=0.0, max_value=4.0, step=0.01, key=f"gpa_{i}")
+        total_gpa += gpa_value
+
+    cgpa = total_gpa / num_semesters
+    st.success(f"🏆 Your CGPA is: **{cgpa:.2f}**")
